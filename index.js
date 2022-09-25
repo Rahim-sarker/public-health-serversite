@@ -77,13 +77,8 @@ function sendPaymentConfirmationEmail(booking){
 }
 
 
-
-
-
-
-
 function sendAppointmentEmail(booking){
-  const {patient, patientName, treatment, date, slot} = booking;
+  const {patient, patientName, treatment, date, slot,doctor} = booking;
 
   var email = {
    to: patient,
@@ -93,9 +88,10 @@ function sendAppointmentEmail(booking){
    html: `
      <div>
        <p>Hello ${patientName}</p>
-       <h3>Your Appointment for ${treatment} is confirmed</h3>
+       <h3>Your Appointment for ${treatment} is confirmed.</h3>
+       <h3>Your Consultant <span style="color:green;">${doctor}</span>.</h3>
        <p>Looking forward to see you  on ${date} at ${slot}.</p>
-       <h3>Public Heath Service</h3>
+       <h3>Public Health Service</h3>
      </div>
    `
 };
@@ -107,10 +103,6 @@ function sendAppointmentEmail(booking){
  });
 
 }
-
-
-
-
 
 
 async function run() {
@@ -160,6 +152,8 @@ async function run() {
       res.send(services);
     });
 
+   
+
 
     app.get('/user', verifyJWT, async(req,res)=>{
       const users = await userCollection.find().toArray();
@@ -200,8 +194,6 @@ async function run() {
       res.send({result, token});
 
     })
-
-
 
 
 
@@ -251,12 +243,9 @@ async function run() {
   })
 
 
-
-
-
 app.post('/booking',async(req,res)=>{
   const booking = req.body;
-  const query = {treatment: booking.treatment, date: booking.date, patient: booking.patient}
+  const query = {treatment: booking.treatment, date: booking.date, patient: booking.patient, doctor: booking.doctor}
   const exists = await bookingCollection.findOne(query);
   
   if(exists){
@@ -283,7 +272,37 @@ app.patch('/booking/:id',verifyJWT, async(req,res)=>{
   res.send(updateDoc)
 })
 
+//Dotor finding start  here
 
+app.get('/doctor/:email', async(req,res)=>{
+  const email = req.params.email;
+  const doctor = await doctorCollection.findOne({email:email});
+  const isDoctor = doctor.role ==='doctor';
+  res.send({doctor:isDoctor})
+
+})
+
+//Dotor finding start  here
+//patient list start from here
+
+app.get('/patients', async(req,res)=>{
+  const dname = req.query.doctor;
+  const query = {patients:dname};
+  const bookings = await bookingCollection.find(query).toArray();
+  res.send(bookings)
+});
+
+
+app.delete('/patient/:id', async(req,res)=>{
+   const id = req.params.id;
+   const query = {_id: ObjectId(id)};
+   const result = await bookingCollection.deleteOne(query);
+   res.send(result);
+
+})
+
+
+//patient list start from here
 
 
 app.get('/doctor', verifyJWT, verifyAdmin, async(req, res)=>{
