@@ -277,7 +277,7 @@ app.patch('/booking/:id',verifyJWT, async(req,res)=>{
 app.get('/doctor/:email', async(req,res)=>{
   const email = req.params.email;
   const doctor = await doctorCollection.findOne({email:email});
-  const isdoctor = doctor.role ==='doctor';
+  const isdoctor = doctor.role =='doctor';
   res.send({doctor:isdoctor})
 
 })
